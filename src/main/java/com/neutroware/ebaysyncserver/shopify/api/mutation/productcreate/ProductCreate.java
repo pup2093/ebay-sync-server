@@ -2,7 +2,6 @@ package com.neutroware.ebaysyncserver.shopify.api.mutation.productcreate;
 
 import com.neutroware.ebaysyncserver.shopify.api.util.service.GraphQlClientFactory;
 import com.neutroware.ebaysyncserver.shopify.api.util.service.ThrottleService;
-import com.neutroware.ebaysyncserver.shopify.api.util.type.Extensions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.graphql.client.HttpGraphQlClient;
@@ -21,8 +20,8 @@ public class ProductCreate {
 
         //language=GraphQl
         String mutation = """
-            mutation ($input: ProductInput!, $media: [CreateMediaInput!]) {
-                productCreate(input: $input, media: $media) {
+            mutation ($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
+                productCreate(product: $product, media: $media) {
                      product {
                           id
                           title
@@ -55,7 +54,7 @@ public class ProductCreate {
             }
             """;
         Mono<ProductCreateResponse> monoResponse = client.document(mutation)
-                .variable("input", args.input())
+                .variable("product", args.product())
                 .variable("media", args.media())
                 .execute()
                 .map((gqlResponse) -> {

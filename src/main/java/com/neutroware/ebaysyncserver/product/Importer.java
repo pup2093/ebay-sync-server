@@ -21,8 +21,8 @@ import com.neutroware.ebaysyncserver.shopify.api.mutation.productdeletemedia.Pro
 import com.neutroware.ebaysyncserver.shopify.api.mutation.productdeletemedia.ProductDeleteMediaArgs;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.productupdate.ProductUpdate;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.productupdate.ProductUpdateArgs;
-import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantupdate.ProductVariantUpdate;
-import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantupdate.ProductVariantUpdateArgs;
+import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantsbulkupdate.ProductVariantsBulkUpdate;
+import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantsbulkupdate.ProductVariantsBulkUpdateArgs;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.publishablePublish.PublishablePublish;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.publishablePublish.PublishablePublishArgs;
 import com.neutroware.ebaysyncserver.shopify.api.query.products.Products;
@@ -51,7 +51,7 @@ public class Importer {
     private final EbayService ebayService;
     private final Products products;
     private final ProductCreate productCreate;
-    private final ProductVariantUpdate productVariantUpdate;
+    private final ProductVariantsBulkUpdate productVariantsBulkUpdate;
     private final InventoryAdjustQuantities inventoryAdjustQuantities;
     private final PublishablePublish publishablePublish;
     private final Publications publications;
@@ -189,7 +189,7 @@ public class Importer {
                 Thread.sleep(1000);
                 var media = importUtils.buildMediaList(ebayItem);
                 ProductUpdateArgs productUpdateArgsArgs = new ProductUpdateArgs(
-                        new ProductUpdateArgs.ProductInput(
+                        new ProductUpdateArgs.ProductUpdateInput(
                                 shopifyProduct.id(),
                                 shopifyProduct.tags()
 

@@ -3,10 +3,10 @@ package com.neutroware.ebaysyncserver.shopify.api.mutation.productcreate;
 import java.util.List;
 
 public record ProductCreateArgs(
-        ProductInput input,
+        ProductCreateInput product,
         List<Media> media
 ) {
-    public record ProductInput(
+    public record ProductCreateInput(
             String descriptionHtml,
             List<String> tags,
             String title

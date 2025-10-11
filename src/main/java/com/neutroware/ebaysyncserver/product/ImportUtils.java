@@ -18,8 +18,8 @@ import com.neutroware.ebaysyncserver.shopify.api.mutation.productdeletemedia.Pro
 import com.neutroware.ebaysyncserver.shopify.api.mutation.productdeletemedia.ProductDeleteMediaArgs;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.productupdate.ProductUpdate;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.productupdate.ProductUpdateArgs;
-import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantupdate.ProductVariantUpdate;
-import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantupdate.ProductVariantUpdateArgs;
+import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantsbulkupdate.ProductVariantsBulkUpdate;
+import com.neutroware.ebaysyncserver.shopify.api.mutation.productvariantsbulkupdate.ProductVariantsBulkUpdateArgs;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.publishablePublish.PublishablePublish;
 import com.neutroware.ebaysyncserver.shopify.api.mutation.publishablePublish.PublishablePublishArgs;
 import com.neutroware.ebaysyncserver.shopify.api.query.products.Products;
@@ -47,7 +47,7 @@ public class ImportUtils {
     private final EbayService ebayService;
     private final Products products;
     private final ProductCreate productCreate;
-    private final ProductVariantUpdate productVariantUpdate;
+    private final ProductVariantsBulkUpdate productVariantsBulkUpdate;
     private final InventoryAdjustQuantities inventoryAdjustQuantities;
     private final PublishablePublish publishablePublish;
     private final Publications publications;
@@ -127,15 +127,15 @@ public class ImportUtils {
         return list;
     }
 
-    public ProductVariantUpdateArgs.InventoryItem buildInventoryItem(GetItemResponse.Item item) {
+    public ProductVariantsBulkUpdateArgs.InventoryItem buildInventoryItem(GetItemResponse.Item item) {
         if (item.shippingDetails() != null && item.shippingDetails().calculatedShippingRate() != null) {
             var weightMajor = item.shippingDetails().calculatedShippingRate().weightMajor();
             var weightMinor = item.shippingDetails().calculatedShippingRate().weightMinor();
 
             if (weightMajor.value() == 0) {
-                return new ProductVariantUpdateArgs.InventoryItem(
-                        new ProductVariantUpdateArgs.Measurement(
-                                new ProductVariantUpdateArgs.Weight(
+                return new ProductVariantsBulkUpdateArgs.InventoryItem(
+                        new ProductVariantsBulkUpdateArgs.Measurement(
+                                new ProductVariantsBulkUpdateArgs.Weight(
                                         "OUNCES",
                                         weightMinor.value()
                                 )
@@ -145,9 +145,9 @@ public class ImportUtils {
                         true
                 );
             } else {
-                return new ProductVariantUpdateArgs.InventoryItem(
-                        new ProductVariantUpdateArgs.Measurement(
-                                new ProductVariantUpdateArgs.Weight(
+                return new ProductVariantsBulkUpdateArgs.InventoryItem(
+                        new ProductVariantsBulkUpdateArgs.Measurement(
+                                new ProductVariantsBulkUpdateArgs.Weight(
                                         "POUNDS",
                                         weightMajor.value() + weightMinor.value()/16 //divide by 16 to convert oz to lbs
                                 )
@@ -158,9 +158,9 @@ public class ImportUtils {
             }
 
         } else {
-            return new ProductVariantUpdateArgs.InventoryItem(
-                    new ProductVariantUpdateArgs.Measurement(
-                            new ProductVariantUpdateArgs.Weight(
+            return new ProductVariantsBulkUpdateArgs.InventoryItem(
+                    new ProductVariantsBulkUpdateArgs.Measurement(
+                            new ProductVariantsBulkUpdateArgs.Weight(
                                     "POUNDS",
                                     0f
                             )
@@ -228,7 +228,7 @@ public class ImportUtils {
                         itemWithSpecifics : ebayItem
         );
         ProductCreateArgs productCreateArgs = new ProductCreateArgs(
-                new ProductCreateArgs.ProductInput(
+                new ProductCreateArgs.ProductCreateInput(
                         ebayItem.description(),
                         tags,
                         ebayItem.title()
@@ -246,17 +246,20 @@ public class ImportUtils {
         product.setShopifyInventoryLocationId(locationId);
         product = productRepository.save(product);
 
-        ProductVariantUpdateArgs.InventoryItem inventoryItem = buildInventoryItem(ebayItem);
+        ProductVariantsBulkUpdateArgs.InventoryItem inventoryItem = buildInventoryItem(ebayItem);
         Float ebayPrice = ebayItem.sellingStatus().currentPrice().value();
         Float shopifyPrice = adjustPrice(userId, ebayPrice);
-        ProductVariantUpdateArgs productVariantUpdateArgs = new ProductVariantUpdateArgs(
-                new ProductVariantUpdateArgs.ProductVariantInput(
-                        variantId,
-                        shopifyPrice.toString(),
-                        inventoryItem
-                )
+        ProductVariantsBulkUpdateArgs productVariantUpdateArgs = new ProductVariantsBulkUpdateArgs(
+                productId,
+                new ProductVariantsBulkUpdateArgs.ProductVariantsBulkInput[]{
+                        new ProductVariantsBulkUpdateArgs.ProductVariantsBulkInput(
+                                variantId,
+                                shopifyPrice.toString(),
+                                inventoryItem
+                        )
+                }
         );
-        var productVariantUpdateResult = productVariantUpdate.updateVariant(storeName, shopifyToken, productVariantUpdateArgs);
+        var productVariantsBulkUpdateResult = productVariantsBulkUpdate.updateVariant(storeName, shopifyToken, productVariantUpdateArgs);
         product.setEbayPrice(ebayPrice);
         product.setShopifyPrice(shopifyPrice);
         product.setWeight(inventoryItem.measurement().weight().value());
@@ -316,7 +319,7 @@ public class ImportUtils {
         );
         tags.add("Potential duplicate");
         ProductCreateArgs productCreateArgs = new ProductCreateArgs(
-                new ProductCreateArgs.ProductInput(
+                new ProductCreateArgs.ProductCreateInput(
                         ebayItem.description(),
                         tags,
                         ebayItem.title()
@@ -334,17 +337,20 @@ public class ImportUtils {
         product.setShopifyInventoryLocationId(locationId);
         product = productRepository.save(product);
 
-        ProductVariantUpdateArgs.InventoryItem inventoryItem = buildInventoryItem(ebayItem);
+        ProductVariantsBulkUpdateArgs.InventoryItem inventoryItem = buildInventoryItem(ebayItem);
         Float ebayPrice = ebayItem.sellingStatus().currentPrice().value();
         Float shopifyPrice = adjustPrice(userId, ebayPrice);
-        ProductVariantUpdateArgs productVariantUpdateArgs = new ProductVariantUpdateArgs(
-                new ProductVariantUpdateArgs.ProductVariantInput(
-                        variantId,
-                        shopifyPrice.toString(),
-                        inventoryItem
-                )
+        ProductVariantsBulkUpdateArgs productVariantUpdateArgs = new ProductVariantsBulkUpdateArgs(
+                productId,
+                new ProductVariantsBulkUpdateArgs.ProductVariantsBulkInput[]{
+                        new ProductVariantsBulkUpdateArgs.ProductVariantsBulkInput(
+                                variantId,
+                                shopifyPrice.toString(),
+                                inventoryItem
+                        )
+                }
         );
-        var productVariantUpdateResult = productVariantUpdate.updateVariant(storeName, shopifyToken, productVariantUpdateArgs);
+        var productVariantsBulkUpdateResult = productVariantsBulkUpdate.updateVariant(storeName, shopifyToken, productVariantUpdateArgs);
         product.setEbayPrice(ebayPrice);
         product.setShopifyPrice(shopifyPrice);
         product.setWeight(inventoryItem.measurement().weight().value());
@@ -417,7 +423,7 @@ public class ImportUtils {
         );
         tags.addAll(shopifyProduct.tags());
         ProductUpdateArgs productUpdateArgsArgs = new ProductUpdateArgs(
-                new ProductUpdateArgs.ProductInput(
+                new ProductUpdateArgs.ProductUpdateInput(
                         shopifyProduct.id(),
                         tags
                 ),
@@ -435,17 +441,20 @@ public class ImportUtils {
         product.setShopifyInventoryLocationId(locationId);
         product = productRepository.save(product);
 
-        ProductVariantUpdateArgs.InventoryItem inventoryItem = buildInventoryItem(ebayItem);
+        ProductVariantsBulkUpdateArgs.InventoryItem inventoryItem = buildInventoryItem(ebayItem);
         Float ebayPrice = ebayItem.sellingStatus().currentPrice().value();
         Float shopifyPrice = adjustPrice(userId, ebayPrice);
-        ProductVariantUpdateArgs productVariantUpdateArgs = new ProductVariantUpdateArgs(
-                new ProductVariantUpdateArgs.ProductVariantInput(
-                        variantId,
-                        shopifyPrice.toString(),
-                        inventoryItem
-                )
+        ProductVariantsBulkUpdateArgs productVariantUpdateArgs = new ProductVariantsBulkUpdateArgs(
+                productId,
+                new ProductVariantsBulkUpdateArgs.ProductVariantsBulkInput[]{
+                        new ProductVariantsBulkUpdateArgs.ProductVariantsBulkInput(
+                                variantId,
+                                shopifyPrice.toString(),
+                                inventoryItem
+                        )
+                }
         );
-        var productVariantUpdateResult = productVariantUpdate.updateVariant(storeName, shopifyToken, productVariantUpdateArgs);
+        var productVariantsBulkUpdateResult = productVariantsBulkUpdate.updateVariant(storeName, shopifyToken, productVariantUpdateArgs);
         product.setEbayPrice(ebayPrice);
         product.setShopifyPrice(shopifyPrice);
         product.setWeight(inventoryItem.measurement().weight().value());

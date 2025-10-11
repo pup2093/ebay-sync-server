@@ -18,7 +18,7 @@ public class GraphQlClientFactory {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
         headers.add("X-Shopify-Access-Token", token);
-        String baseUrl = String.format("https://%s.myshopify.com/admin/api/2024-04/graphql.json", storeName);
+        String baseUrl = String.format("https://%s.myshopify.com/admin/api/2025-10/graphql.json", storeName);
         WebClient client = WebClient.builder().baseUrl(baseUrl).exchangeStrategies(exchangeStragegies)
                 .defaultHeaders(h -> h.addAll(headers)).build();
        return HttpGraphQlClient.builder(client).build();

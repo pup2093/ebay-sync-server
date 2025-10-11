@@ -6,10 +6,10 @@ import com.neutroware.ebaysyncserver.shopify.api.mutation.productcreate.ProductC
 import java.util.List;
 
 public record ProductUpdateArgs(
-        ProductInput input,
+        ProductUpdateInput product,
         List<ProductCreateArgs.Media> media
 ) {
-    public record ProductInput(
+    public record ProductUpdateInput(
             String id,
             List<String> tags
     ) {}
